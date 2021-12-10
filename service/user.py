@@ -38,4 +38,3 @@ class UserService:
         return hmac.compare_digest(
             base64.b64decode(get_hash),
             hashlib.pbkdf2_hmac('sha256', password.encode(), PWD_HASH_SALT, PWD_HASH_ITERATIONS))
-
