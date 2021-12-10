@@ -1,7 +1,10 @@
+import hashlib
+
+from constants import PWD_HASH_SALT, PWD_HASH_ITERATIONS
 from dao.user import UserDAO
 
 
-class DirectorService:
+class UserService:
     def __init__(self, dao: UserDAO):
         self.dao = dao
 
@@ -20,3 +23,11 @@ class DirectorService:
 
     def delete(self, uid):
         self.dao.delete(uid)
+
+    def get_hash(password):
+        return hashlib.pbkdf2_hmac(
+            'sha256',
+            password.encode('utf-8'),  # Convert the password to bytes
+            PWD_HASH_SALT,
+            PWD_HASH_ITERATIONS
+        ).decode("utf-8", "ignore")
