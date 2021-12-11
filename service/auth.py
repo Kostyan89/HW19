@@ -40,9 +40,9 @@ class AuthService:
             "role": user.role
         }
 
-        data["exp"] = self.dao.create_experation_date(minutes=30)
+        data["exp"] = self.dao.create_experation_date1(minutes=30)
         access_token = self.dao.create_token(data, secret, algorithm=algo)
-        data["exp"] = self.dao.create_experation_date(days=130)
+        data["exp"] = self.dao.create_experation_date2(days=130)
         refresh_token = self.dao.create_token(data, secret, algorithm=algo)
         tokens = {"access_token": access_token, "refresh_token": refresh_token}
 
