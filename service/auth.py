@@ -5,8 +5,8 @@ from flask import request
 from flask_restx import abort
 from jwt import jwt
 
+from dao.model.auth import Auth
 from dao.model.user import User
-from dao.user import UserDAO
 from service.user import UserService
 from setup_db import db
 
@@ -18,17 +18,16 @@ algo = 'HS256'
 class AuthService:
     def create(self):
         req_json = request.json
-        username = req_json.get("username", None)
-        password = req_json.get("password", None)
-        if None in [username, password]:
-            abort(400)
+        auth = Auth.query.get(req_json)
+        if not auth:
+            abort(404)
 
-        user = db.session.query(User).filter(User.username == username).first()
+        user = db.session.query(User).filter(User.username == auth.username).first()
 
         if user is None:
             return {"error": "Неверные учётные данные"}, 401
 
-        password_hash = UserService.get_hash(password)
+        password_hash = UserService.get_hash(auth.password)
 
         if password_hash != user.password:
             return {"error": "Неверные учётные данные"}, 401
