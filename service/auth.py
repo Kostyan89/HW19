@@ -4,7 +4,7 @@ import datetime
 from flask import request
 from flask_restx import abort
 from jwt import jwt
-
+from dao.auth import AuthDAO
 from dao.model.auth import Auth
 from dao.model.user import User
 from service.user import UserService
@@ -16,6 +16,9 @@ algo = 'HS256'
 
 
 class AuthService:
+    def __init__(self, dao: AuthDAO):
+        self.dao = dao
+
     def create(self):
         req_json = request.json
         auth = Auth.query.get(req_json)
@@ -36,12 +39,14 @@ class AuthService:
             "username": user.username,
             "role": user.role
         }
-        min30 = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
-        data["exp"] = calendar.timegm(min30.timetuple())
-        access_token = jwt.encode(data, secret, algorithm=algo)
-        days130 = datetime.datetime.utcnow() + datetime.timedelta(days=130)
-        data["exp"] = calendar.timegm(days130.timetuple())
-        refresh_token = jwt.encode(data, secret, algorithm=algo)
+
+
+
+
+        data["exp"] = self.dao.create_experation_date()
+        access_token = self.dao.create_token()
+        data["exp"] = self.dao.create_experation_date()
+        refresh_token = self.dao.create_token()
         tokens = {"access_token": access_token, "refresh_token": refresh_token}
 
         return tokens, 201
