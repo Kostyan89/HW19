@@ -3,7 +3,7 @@ import datetime
 
 from jwt import jwt
 
-from dao.model import Auth
+
 from dao.model.auth import Auth
 
 
@@ -14,10 +14,10 @@ class AuthDAO:
         self.secret = secret
         self.algorithm = algorithm
 
-    def create_token(self, data, secret, algorithm, minutes:int, days:int):
+    def create_token(self, data, secret, algorithm):
         return jwt.encode(data, secret, algorithm)
 
-    def create_time_period(self, data, time):
+    def create_time_period(self, time):
         time_period = datetime.datetime.utcnow() + datetime.timedelta(time)
         return time_period
 
