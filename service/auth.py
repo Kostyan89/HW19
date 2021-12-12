@@ -16,9 +16,6 @@ algo = 'HS256'
 
 
 class AuthService:
-    def __init__(self, dao: AuthDAO):
-        self.dao = dao
-
     def create(self):
         req_json = request.json
         auth = Auth.query.get(req_json)
@@ -40,10 +37,12 @@ class AuthService:
             "role": user.role
         }
 
-        data["exp"] = self.dao.create_experation_date1(minutes=30)
-        access_token = self.dao.create_token(data, secret, algorithm=algo)
-        data["exp"] = self.dao.create_experation_date2(days=130)
-        refresh_token = self.dao.create_token(data, secret, algorithm=algo)
+        min30 = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+        data["exp"] = calendar.timegm(min30.timetuple())
+        access_token = jwt.encode(data, secret, algorithm=algo)
+        days130 = datetime.datetime.utcnow() + datetime.timedelta(days=130)
+        data["exp"] = calendar.timegm(days130.timetuple())
+        refresh_token = jwt.encode(data, secret, algorithm=algo)
         tokens = {"access_token": access_token, "refresh_token": refresh_token}
 
         return tokens, 201
