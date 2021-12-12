@@ -29,12 +29,12 @@ class UserService:
     def get_hash(password):
         return hashlib.pbkdf2_hmac(
             'sha256',
-            password.encode('utf-8'),  # Convert the password to bytes
+            password.encode('utf-8'),
             PWD_HASH_SALT,
             PWD_HASH_ITERATIONS
         ).decode("utf-8", "ignore")
 
-    def compare_passwords(self, get_hash, password) -> bool:
+    def compare_passwords(self, get_hash, password):
         return hmac.compare_digest(
             base64.b64decode(get_hash),
             hashlib.pbkdf2_hmac('sha256', password.encode(), PWD_HASH_SALT, PWD_HASH_ITERATIONS))

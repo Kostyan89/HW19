@@ -1,12 +1,17 @@
+import base64
 import calendar
-import datetime
+import hashlib
+import hmac
+from datetime import datetime, timedelta
 
 from flask import request
 from flask_restx import abort
 from jwt import jwt
-from dao.auth import AuthDAO
+
+from constants import PWD_HASH_SALT, PWD_HASH_ITERATIONS
 from dao.model.auth import Auth
 from dao.model.user import User
+from implemented import user_service
 from service.user import UserService
 from setup_db import db
 
@@ -16,36 +21,30 @@ algo = 'HS256'
 
 
 class AuthService:
-    def create(self):
-        req_json = request.json
-        auth = Auth.query.get(req_json)
-        if not auth:
-            abort(404)
+    @staticmethod
+    def _generate_tokens(data):
+        now = datetime.now()
 
-        user = db.session.query(User).filter(User.username == auth.username).first()
-
-        if user is None:
-            return {"error": "Неверные учётные данные"}, 401
-
-        password_hash = UserService.get_hash(auth.password)
-
-        if password_hash != user.password:
-            return {"error": "Неверные учётные данные"}, 401
-
-        data = {
-            "username": user.username,
-            "role": user.role
-        }
-
-        min30 = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+        min30 = now + timedelta(minutes=30)
         data["exp"] = calendar.timegm(min30.timetuple())
         access_token = jwt.encode(data, secret, algorithm=algo)
-        days130 = datetime.datetime.utcnow() + datetime.timedelta(days=130)
+
+        days130 = now + timedelta(days=130)
         data["exp"] = calendar.timegm(days130.timetuple())
         refresh_token = jwt.encode(data, secret, algorithm=algo)
-        tokens = {"access_token": access_token, "refresh_token": refresh_token}
 
-        return tokens, 201
+        return {"access_token": access_token, "refresh_token": refresh_token}
+
+    def create(self, username, password):
+        user = db.session.query(User).filter(User.username == username).first()
+
+        ok = user_service.compare_passwords(password_hash=user.password, other_password=password)
+        if not ok:
+            abort(401)
+        return self._generate_tokens({
+            "username": user.username,
+            "role": user.role
+        })
 
     def update(self):
         req_json = request.json
